@@ -400,6 +400,7 @@ function processCsvBuffer(buffer, sourceLabel){
         parsed = parsed.slice(1);
       }
       parsed = parsed.filter(p => p.word && p.meaning);
+      parsed = parsed.map((p, i) => ({ ...p, no: i + 1 }));
       if (!parsed.length){
         statusEl.textContent = 'CSVから単語を読み取れませんでした。「単語,意味」の2列形式か確認してください。';
         statusEl.classList.add('err');
@@ -582,7 +583,6 @@ function renderTest(title, questions){
         <li>
           <span class="qnum">${String(i+1).padStart(2,'0')}</span>
           <span class="qprompt">
-            <span class="tag">${q.qdir === 'en-ja' ? 'EN → JA' : 'JA → EN'}</span>
             ${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}
           </span>
           <span class="qblank"></span>
@@ -603,9 +603,8 @@ function renderAnswers(title, questions){
     <ol class="qlist">
       ${questions.map((q,i) => `
         <li>
-          <span class="qnum">${String(i+1).padStart(2,'0')}</span>
+          <span class="qnum">${String(q.no).padStart(2,'0')}</span>
           <span class="qprompt">
-            <span class="tag">${q.qdir === 'en-ja' ? 'EN → JA' : 'JA → EN'}</span>
             ${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}
           </span>
           <span class="ans-text">${escapeHtml(q.qdir === 'en-ja' ? q.meaning : q.word)}</span>
