@@ -271,17 +271,10 @@
       page-break-inside:avoid;
       break-inside:avoid;
     }
-    .qlist li:nth-child(15n+1){
+    .printpage.pbreak{
       page-break-before:always;
       break-before:page;
     }
-    .qlist li:first-child{
-      page-break-before:auto;
-      break-before:auto;
-    }
-    .page-table{ display:table; width:100%; }
-    .page-thead{ display:table-header-group; }
-    .page-tbody{ display:table-row-group; }
     .run-header{
       display:block;
       font-family:'Shippori Mincho', serif;
@@ -300,7 +293,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v8.27.4)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v8.28.1)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -620,6 +613,24 @@ function todayStr(){
   return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
 }
 
+const PAGE_SIZE = 15;
+
+function buildPagedList(questions, headerText, rowFn){
+  let html = '';
+  for (let start = 0; start < questions.length; start += PAGE_SIZE){
+    const chunk = questions.slice(start, start + PAGE_SIZE);
+    html += `
+      <div class="printpage${start > 0 ? ' pbreak' : ''}">
+        <div class="run-header">${escapeHtml(headerText)}</div>
+        <ol class="qlist">
+          ${chunk.map((q, j) => rowFn(q, start + j)).join('')}
+        </ol>
+      </div>
+    `;
+  }
+  return html;
+}
+
 function renderTest(title, questions){
   const el = document.getElementById('paperTest');
   el.innerHTML = `
@@ -628,22 +639,15 @@ function renderTest(title, questions){
       <div class="sheet-meta">DATE: ____ / ____<br>SCORE: ___ / ${questions.length}</div>
     </div>
     <div class="sheet-sub"><span>NAME: _______________________</span><span>${questions.length} QUESTIONS</span></div>
-    <div class="page-table">
-      <div class="page-thead"><div class="run-header">${escapeHtml(title)}</div></div>
-      <div class="page-tbody">
-        <ol class="qlist">
-          ${questions.map((q,i) => `
-            <li>
-              <span class="qnum">${String(i+1).padStart(2,'0')}</span>
-              <span class="qprompt">
-                ${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}
-              </span>
-              <span class="qblank"></span>
-            </li>
-          `).join('')}
-        </ol>
-      </div>
-    </div>
+    ${buildPagedList(questions, title, (q, i) => `
+      <li>
+        <span class="qnum">${String(i+1).padStart(2,'0')}</span>
+        <span class="qprompt">
+          ${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}
+        </span>
+        <span class="qblank"></span>
+      </li>
+    `)}
   `;
 }
 
@@ -655,22 +659,15 @@ function renderAnswers(title, questions){
       <div class="sheet-meta">GENERATED: ${todayStr()}</div>
     </div>
     <div class="sheet-sub"><span>ANSWER KEY</span><span>${questions.length} QUESTIONS</span></div>
-    <div class="page-table">
-      <div class="page-thead"><div class="run-header">${escapeHtml(title)} — 解答</div></div>
-      <div class="page-tbody">
-        <ol class="qlist">
-          ${questions.map((q,i) => `
-            <li>
-              <span class="qnum">${String(q.no).padStart(2,'0')}</span>
-              <span class="qprompt">
-                ${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}
-              </span>
-              <span class="ans-text">${escapeHtml(q.qdir === 'en-ja' ? q.meaning : q.word)}</span>
-            </li>
-          `).join('')}
-        </ol>
-      </div>
-    </div>
+    ${buildPagedList(questions, title + ' — 解答', (q) => `
+      <li>
+        <span class="qnum">${String(q.no).padStart(2,'0')}</span>
+        <span class="qprompt">
+          ${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}
+        </span>
+        <span class="ans-text">${escapeHtml(q.qdir === 'en-ja' ? q.meaning : q.word)}</span>
+      </li>
+    `)}
   `;
 }
 
