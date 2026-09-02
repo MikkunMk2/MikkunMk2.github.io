@@ -231,6 +231,13 @@
     letter-spacing:.05em;
     margin-bottom:1px;
   }
+  .postag{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:12px;
+    font-weight:700;
+    color:var(--red);
+    margin-left:5px;
+  }
   .qblank{
     flex:1;
     border-bottom:1px solid var(--ink);
@@ -293,7 +300,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v8.29.1)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v8.29.2)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -305,10 +312,11 @@
     </div>
 
     <div class="field">
-      <label>形式の例(1行目はヘッダーでもOK)</label>
-      <textarea readonly rows="3">word,meaning
-apple,りんご
-give up,あきらめる</textarea>
+      <label>形式の例(1行目はヘッダーでもOK・3列目の品詞は任意)</label>
+      <textarea readonly rows="4">word,meaning,pos
+apple,りんご,
+park,公園,名
+park,〜を駐車する,動</textarea>
     </div>
 
     <div class="field" id="driveField">
@@ -430,7 +438,7 @@ function processCsvBuffer(buffer, sourceLabel){
   Papa.parse(text, {
     complete: function(results){
       const rows = results.data.filter(r => r.length >= 2 && (r[0]||'').trim() !== '');
-      let parsed = rows.map(r => ({ word: (r[0]||'').trim(), meaning: (r[1]||'').trim() }));
+      let parsed = rows.map(r => ({ word: (r[0]||'').trim(), meaning: (r[1]||'').trim(), pos: (r[2]||'').trim() }));
       // ヘッダー行らしきものを除去
       if (parsed.length && /^(word|英単語|単語|english)$/i.test(parsed[0].word)) {
         parsed = parsed.slice(1);
@@ -634,7 +642,7 @@ document.getElementById('genBtn').addEventListener('click', () => {
     let combined = '';
     for (let s = 0; s < setsCount; s++){
       const questions = buildOneQuestionSet(base, dir, count, doShuffle);
-      const setLabel = ` — Set ${s + 1}/${setsCount}`;
+      const setLabel = '';
       combined += buildSheetHtml('test', title + setLabel, questions, s > 0);
       combined += buildSheetHtml('answers', title + setLabel, questions, true);
     }
@@ -681,17 +689,18 @@ function buildSheetHtml(kind, title, questions, forceBreak){
   const subHtml = isAns
     ? `<div class="sheet-sub"><span>ANSWER KEY</span><span>${questions.length} QUESTIONS</span></div>`
     : `<div class="sheet-sub"><span>NAME: _______________________</span><span>${questions.length} QUESTIONS</span></div>`;
+  const posTag = (q) => q.pos ? `<span class="postag">(${escapeHtml(q.pos)})</span>` : '';
   const rowFn = isAns
     ? (q) => `
         <li>
           <span class="qnum">${String(q.no).padStart(2,'0')}</span>
-          <span class="qprompt">${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}</span>
+          <span class="qprompt">${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}${posTag(q)}</span>
           <span class="ans-text">${escapeHtml(q.qdir === 'en-ja' ? q.meaning : q.word)}</span>
         </li>`
     : (q, i) => `
         <li>
           <span class="qnum">${String(i+1).padStart(2,'0')}</span>
-          <span class="qprompt">${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}</span>
+          <span class="qprompt">${escapeHtml(q.qdir === 'en-ja' ? q.word : q.meaning)}${posTag(q)}</span>
           <span class="qblank"></span>
         </li>`;
   return `
