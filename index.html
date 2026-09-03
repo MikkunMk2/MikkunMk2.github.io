@@ -300,7 +300,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.3.1)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.3.2)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -658,8 +658,10 @@ document.getElementById('genBtn').addEventListener('click', () => {
 });
 
 function todayStr(){
-  const d = new Date();
-  return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+  const fmt = new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const parts = fmt.formatToParts(new Date());
+  const get = t => parts.find(p => p.type === t).value;
+  return `${get('year')}/${get('month')}/${get('day')} JST`;
 }
 
 const PAGE_SIZE = 15;
@@ -690,19 +692,19 @@ function buildSheetHtml(kind, title, questions, forceBreak){
     ? `<div class="sheet-sub"><span>ANSWER KEY</span><span>${questions.length} QUESTIONS</span></div>`
     : `<div class="sheet-sub"><span>NAME: _______________________</span><span>${questions.length} QUESTIONS</span></div>`;
   const posTag = (q) => q.pos ? `<span class="postag">(${escapeHtml(q.pos)})</span>` : '';
-  const wordDisplay = (q) => escapeHtml(q.word) + posTag(q);
+  const wordDisplay = (q, withTag) => escapeHtml(q.word) + (withTag && q.pos ? posTag(q) : '');
   const meaningDisplay = (q) => escapeHtml(q.meaning);
   const rowFn = isAns
     ? (q) => `
         <li>
           <span class="qnum">${String(q.no).padStart(2,'0')}</span>
-          <span class="qprompt">${q.qdir === 'en-ja' ? wordDisplay(q) : meaningDisplay(q)}</span>
-          <span class="ans-text">${q.qdir === 'en-ja' ? meaningDisplay(q) : wordDisplay(q)}</span>
+          <span class="qprompt">${q.qdir === 'en-ja' ? wordDisplay(q, false) : meaningDisplay(q)}</span>
+          <span class="ans-text">${q.qdir === 'en-ja' ? meaningDisplay(q) : wordDisplay(q, false)}</span>
         </li>`
     : (q, i) => `
         <li>
           <span class="qnum">${String(i+1).padStart(2,'0')}</span>
-          <span class="qprompt">${q.qdir === 'en-ja' ? wordDisplay(q) : meaningDisplay(q)}</span>
+          <span class="qprompt">${q.qdir === 'en-ja' ? wordDisplay(q, true) : meaningDisplay(q)}</span>
           <span class="qblank"></span>
         </li>`;
   return `
