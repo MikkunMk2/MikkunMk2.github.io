@@ -214,7 +214,13 @@
     font-family:'JetBrains Mono', monospace;
     font-size:12px;
     color:var(--red);
-    width:22px;
+    width:34px;
+    flex-shrink:0;
+  }
+  .ans-no{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--graphite);
     flex-shrink:0;
   }
   .qprompt{
@@ -300,7 +306,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.3.2)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.3.3)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -661,7 +667,7 @@ function todayStr(){
   const fmt = new Intl.DateTimeFormat('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' });
   const parts = fmt.formatToParts(new Date());
   const get = t => parts.find(p => p.type === t).value;
-  return `${get('year')}/${get('month')}/${get('day')} JST`;
+  return `${get('year')}/${get('month')}/${get('day')}`;
 }
 
 const PAGE_SIZE = 15;
@@ -692,19 +698,22 @@ function buildSheetHtml(kind, title, questions, forceBreak){
     ? `<div class="sheet-sub"><span>ANSWER KEY</span><span>${questions.length} QUESTIONS</span></div>`
     : `<div class="sheet-sub"><span>NAME: _______________________</span><span>${questions.length} QUESTIONS</span></div>`;
   const posTag = (q) => q.pos ? `<span class="postag">(${escapeHtml(q.pos)})</span>` : '';
-  const wordDisplay = (q, withTag) => escapeHtml(q.word) + (withTag && q.pos ? posTag(q) : '');
+  const wordDisplay = (q) => escapeHtml(q.word) + posTag(q);
   const meaningDisplay = (q) => escapeHtml(q.meaning);
+  const promptDisplay = (q) => q.qdir === 'en-ja' ? wordDisplay(q) : meaningDisplay(q);
+  const answerDisplay = (q) => q.qdir === 'en-ja' ? meaningDisplay(q) : escapeHtml(q.word);
   const rowFn = isAns
-    ? (q) => `
+    ? (q, i) => `
         <li>
-          <span class="qnum">${String(q.no).padStart(2,'0')}</span>
-          <span class="qprompt">${q.qdir === 'en-ja' ? wordDisplay(q, false) : meaningDisplay(q)}</span>
-          <span class="ans-text">${q.qdir === 'en-ja' ? meaningDisplay(q) : wordDisplay(q, false)}</span>
+          <span class="qnum">(${i+1})</span>
+          <span class="qprompt">${promptDisplay(q)}</span>
+          <span class="ans-no">[${String(q.no).padStart(4,'0')}]</span>
+          <span class="ans-text">${answerDisplay(q)}</span>
         </li>`
     : (q, i) => `
         <li>
-          <span class="qnum">${String(i+1).padStart(2,'0')}</span>
-          <span class="qprompt">${q.qdir === 'en-ja' ? wordDisplay(q, true) : meaningDisplay(q)}</span>
+          <span class="qnum">(${i+1})</span>
+          <span class="qprompt">${promptDisplay(q)}</span>
           <span class="qblank"></span>
         </li>`;
   return `
