@@ -262,6 +262,17 @@
     vertical-align:bottom;
     margin:0 2px;
   }
+  .head-side{
+    display:flex;
+    align-items:flex-end;
+    gap:26px;
+  }
+  .name-field{
+    font-size:13.5px;
+    color:var(--ink);
+    white-space:nowrap;
+    padding-bottom:3px;
+  }
   /* テスト用紙は白黒印刷を想定し、赤系の色を使わない */
   .sheet-test .qnum{ color:var(--ink); }
   .sheet-test .postag{ color:var(--ink-soft); }
@@ -317,7 +328,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.3.5)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.3.6)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -705,10 +716,13 @@ function buildSheetHtml(kind, title, questions, forceBreak){
   const fl = (w) => `<span class="fillline" style="width:${w}px;"></span>`;
   const metaHtml = isAns
     ? `<div class="sheet-meta">GENERATED: ${todayStr()}</div>`
-    : `<div class="sheet-meta">日付：${fl(30)}／${fl(30)}<br>得点：${fl(30)}／${questions.length}</div>`;
+    : `<div class="sheet-meta">日付：　／　<br>得点：　／${questions.length}</div>`;
+  const headRightHtml = isAns
+    ? metaHtml
+    : `<div class="head-side"><span class="name-field">氏名　${fl(140)}</span>${metaHtml}</div>`;
   const subHtml = isAns
     ? `<div class="sheet-sub"><span>ANSWER KEY</span><span>${questions.length} QUESTIONS</span></div>`
-    : `<div class="sheet-sub"><span>氏名　${fl(150)}</span><span>${questions.length} QUESTIONS</span></div>`;
+    : `<div class="sheet-sub" style="justify-content:flex-end;"><span>${questions.length} QUESTIONS</span></div>`;
   const posTag = (q) => q.pos ? `<span class="postag">(${escapeHtml(q.pos)})</span>` : '';
   const wordDisplay = (q) => escapeHtml(q.word) + posTag(q);
   const meaningDisplay = (q) => escapeHtml(q.meaning);
@@ -732,7 +746,7 @@ function buildSheetHtml(kind, title, questions, forceBreak){
     <div class="sheet-${kind} ${forceBreak ? 'printpage pbreak' : ''}">
       <div class="sheet-head">
         <h2>${escapeHtml(headTitle)}</h2>
-        ${metaHtml}
+        ${headRightHtml}
       </div>
       ${subHtml}
       ${buildPagedList(questions, headTitle, rowFn)}
