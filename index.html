@@ -327,7 +327,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.4.1)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.4.2)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -655,11 +655,14 @@ document.getElementById('genBtn').addEventListener('click', () => {
   const paperTest = document.getElementById('paperTest');
   const paperAns = document.getElementById('paperAns');
   const tabsEl = document.querySelector('.tabs');
+  const effStart = rangeStart !== null ? rangeStart : 1;
+  const effEnd = rangeEnd !== null ? rangeEnd : words.length;
+  const rangeLabel = `${effStart}〜${effEnd}`;
 
   if (setsCount <= 1) {
     const questions = buildOneQuestionSet(base, dir, count, doShuffle);
-    paperTest.innerHTML = buildSheetHtml('test', title, questions, false);
-    paperAns.innerHTML = buildSheetHtml('answers', title, questions, false);
+    paperTest.innerHTML = buildSheetHtml('test', title, questions, false, rangeLabel);
+    paperAns.innerHTML = buildSheetHtml('answers', title, questions, false, rangeLabel);
     tabsEl.style.display = '';
     paperTest.classList.add('print-include');
     paperAns.classList.toggle('print-include', document.getElementById('answerCheck').checked);
@@ -670,8 +673,8 @@ document.getElementById('genBtn').addEventListener('click', () => {
     for (let s = 0; s < setsCount; s++){
       const questions = buildOneQuestionSet(base, dir, count, doShuffle);
       const setLabel = '';
-      combined += buildSheetHtml('test', title + setLabel, questions, s > 0);
-      combined += buildSheetHtml('answers', title + setLabel, questions, true);
+      combined += buildSheetHtml('test', title + setLabel, questions, s > 0, rangeLabel);
+      combined += buildSheetHtml('answers', title + setLabel, questions, true, rangeLabel);
     }
     paperTest.innerHTML = combined;
     paperAns.innerHTML = '';
@@ -709,9 +712,10 @@ function buildPagedList(questions, headerText, rowFn){
   return html;
 }
 
-function buildSheetHtml(kind, title, questions, forceBreak){
+function buildSheetHtml(kind, title, questions, forceBreak, rangeLabel){
   const isAns = kind === 'answers';
   const headTitle = isAns ? title + ' — 解答' : title;
+  const countLabel = `${questions.length}問(範囲：${rangeLabel})`;
   const fl = (w) => `<span class="fillline" style="width:${w}px;"></span>`;
   const metaHtml = isAns
     ? `<div class="sheet-meta">GENERATED: ${todayStr()}</div>`
@@ -720,8 +724,8 @@ function buildSheetHtml(kind, title, questions, forceBreak){
     ? metaHtml
     : `<div class="head-side"><span class="name-field">氏名　${fl(140)}</span>${metaHtml}</div>`;
   const subHtml = isAns
-    ? `<div class="sheet-sub"><span>ANSWER KEY</span><span>${questions.length} QUESTIONS</span></div>`
-    : `<div class="sheet-sub" style="justify-content:flex-end;"><span>${questions.length} QUESTIONS</span></div>`;
+    ? `<div class="sheet-sub"><span>ANSWER KEY</span><span>${countLabel}</span></div>`
+    : `<div class="sheet-sub" style="justify-content:flex-end;"><span>${countLabel}</span></div>`;
   const posTag = (q) => q.pos ? `<span class="postag">(${escapeHtml(q.pos)})</span>` : '';
   const wordDisplay = (q) => escapeHtml(q.word) + posTag(q);
   const meaningDisplay = (q) => escapeHtml(q.meaning);
