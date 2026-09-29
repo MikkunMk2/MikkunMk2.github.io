@@ -327,7 +327,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.4.2)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.4.3)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -730,14 +730,23 @@ function buildSheetHtml(kind, title, questions, forceBreak, rangeLabel){
   const wordDisplay = (q) => escapeHtml(q.word) + posTag(q);
   const meaningDisplay = (q) => escapeHtml(q.meaning);
   const promptDisplay = (q) => q.qdir === 'en-ja' ? wordDisplay(q) : meaningDisplay(q);
-  const answerDisplay = (q) => q.qdir === 'en-ja' ? meaningDisplay(q) : escapeHtml(q.word);
+  const pad4 = (n) => String(n).padStart(4, '0');
+  const answerCellHtml = (q) => {
+    if (q.qdir === 'en-ja') {
+      return `<span class="ans-no">[${pad4(q.no)}]</span><span class="ans-text">${meaningDisplay(q)}</span>`;
+    }
+    // 日→英: 意味が完全一致する単語をすべて番号順に併記(表記ゆれの同義語対応)
+    const group = words.filter(w => w.meaning === q.meaning).sort((a, b) => a.no - b.no);
+    const list = group.length ? group : [q];
+    const items = list.map(w => `<span class="ans-text">${escapeHtml(w.word)}</span><span class="ans-no">[${pad4(w.no)}]</span>`);
+    return items.join(' / ');
+  };
   const rowFn = isAns
     ? (q, i) => `
         <li>
           <span class="qnum">(${i+1})</span>
           <span class="qprompt">${promptDisplay(q)}</span>
-          <span class="ans-no">[${String(q.no).padStart(4,'0')}]</span>
-          <span class="ans-text">${answerDisplay(q)}</span>
+          ${answerCellHtml(q)}
         </li>`
     : (q, i) => `
         <li>
