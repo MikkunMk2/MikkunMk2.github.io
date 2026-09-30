@@ -327,7 +327,7 @@
   <!-- ===== LEFT CONFIG ===== -->
   <div class="config">
     <div class="eyebrow">VOCAB DRILL PRINTER</div>
-    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.29.2)</span></h1>
+    <h1>単語・熟語<br>テストメーカー <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--graphite);font-weight:400;">(v9.29.3)</span></h1>
 
     <div class="field">
       <label>① 単語リスト(CSV)</label>
@@ -661,8 +661,8 @@ document.getElementById('genBtn').addEventListener('click', () => {
 
   if (setsCount <= 1) {
     const questions = buildOneQuestionSet(base, dir, count, doShuffle);
-    paperTest.innerHTML = buildSheetHtml('test', title, questions, false, rangeLabel);
-    paperAns.innerHTML = buildSheetHtml('answers', title, questions, false, rangeLabel);
+    paperTest.innerHTML = buildSheetHtml('test', title, questions, false, rangeLabel, effStart, effEnd);
+    paperAns.innerHTML = buildSheetHtml('answers', title, questions, false, rangeLabel, effStart, effEnd);
     tabsEl.style.display = '';
     paperTest.classList.add('print-include');
     paperAns.classList.toggle('print-include', document.getElementById('answerCheck').checked);
@@ -673,8 +673,8 @@ document.getElementById('genBtn').addEventListener('click', () => {
     for (let s = 0; s < setsCount; s++){
       const questions = buildOneQuestionSet(base, dir, count, doShuffle);
       const setLabel = '';
-      combined += buildSheetHtml('test', title + setLabel, questions, s > 0, rangeLabel);
-      combined += buildSheetHtml('answers', title + setLabel, questions, true, rangeLabel);
+      combined += buildSheetHtml('test', title + setLabel, questions, s > 0, rangeLabel, effStart, effEnd);
+      combined += buildSheetHtml('answers', title + setLabel, questions, true, rangeLabel, effStart, effEnd);
     }
     paperTest.innerHTML = combined;
     paperAns.innerHTML = '';
@@ -712,7 +712,7 @@ function buildPagedList(questions, headerText, rowFn){
   return html;
 }
 
-function buildSheetHtml(kind, title, questions, forceBreak, rangeLabel){
+function buildSheetHtml(kind, title, questions, forceBreak, rangeLabel, rangeStart, rangeEnd){
   const isAns = kind === 'answers';
   const headTitle = isAns ? title + ' — 解答' : title;
   const countLabel = `${questions.length}問(範囲：${rangeLabel})`;
@@ -735,8 +735,8 @@ function buildSheetHtml(kind, title, questions, forceBreak, rangeLabel){
     if (q.qdir === 'en-ja') {
       return `<span class="ans-no">[${pad4(q.no)}]</span><span class="ans-text">${meaningDisplay(q)}</span>`;
     }
-    // 日→英: 選ばれた単語を先頭に、意味が完全一致する他の単語を番号順で併記(表記ゆれの同義語対応)
-    const others = words.filter(w => w.meaning === q.meaning && w.no !== q.no).sort((a, b) => a.no - b.no);
+    // 日→英: 選ばれた単語を先頭に、意味が完全一致する他の単語(出題範囲内のみ)を番号順で併記
+    const others = words.filter(w => w.meaning === q.meaning && w.no !== q.no && w.no >= rangeStart && w.no <= rangeEnd).sort((a, b) => a.no - b.no);
     const list = [q, ...others];
     const items = list.map(w => `<span class="ans-text">${escapeHtml(w.word)}</span><span class="ans-no">[${pad4(w.no)}]</span>`);
     return items.join(' / ');
